@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Thread</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&family=Syne:wght@400;700;800&display=swap');
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --accent: #e8ff5a;
+      --accent2: #ff5a8a;
+      --text: #f0f0f0;
+      --muted: #888;
+      --border: #2a2a3a;
+      --error: #ff4d4d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,255,90,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,255,90,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 600px;
+      padding-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(232,255,90,0.2);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .intro-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin: 1.8rem 0 0.75rem 0;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .intro-list {
+      margin-bottom: 1.5rem;
+      padding-left: 0;
+      list-style-type: none;
+    }
+
+    .intro-list li {
+      margin-bottom: 0.75rem;
+      color: var(--muted);
+    }
+
+    .intro-list b { color: var(--text); }
+
+    .accordion-group { margin-top: 1rem; }
+
+    .accordion-btn {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      text-align: left;
+      transition: all 0.2s;
+      margin-top: 0.75rem;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .accordion-btn:hover, .accordion-btn:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(232,255,90,0.1); }
+    .accordion-btn[aria-expanded="true"] {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-color: var(--accent);
+    }
+
+    .accordion-label { display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+    .accordion-title { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .accordion-selection { font-size: 1rem; color: var(--accent); }
+
+    .accordion-panel {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-top: none;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      padding: 1.5rem;
+      display: none;
+    }
+
+    .accordion-panel.open { display: block; }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .cat-btn {
+      padding: 0.8rem 0.6rem;
+      font-size: 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+      outline: none;
+    }
+    
+    .cat-btn:hover, .cat-btn:focus { border-color: var(--accent); color: var(--text); }
+    .cat-btn small { font-size: 0.6rem; opacity: 0.7; pointer-events: none; }
+    .cat-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 800; }
+    .cat-btn.active:focus { box-shadow: 0 0 0 2px var(--text); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: 'Syne Mono', monospace;
+    }
+
+    .stat-label {
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.2rem;
+    }
+
+    .status-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1rem;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .status-box.player-active { border-color: var(--accent); }
+    .status-box.computer-active { border-color: var(--accent2); }
+
+    .current-word {
+      font-size: clamp(2rem, 10vw, 3.5rem);
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .last-letter {
+      color: var(--accent);
+      border-bottom: 3px solid var(--accent);
+    }
+
+    .timer-wrap {
+      background: var(--border);
+      border-radius: 10px;
+      height: 4px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .timer-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+
+    .timer-bar.warning { background: var(--accent2); }
+
+    #wordInput {
+      width: 100%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      font-size: 1.25rem;
+      color: var(--text);
+      font-family: 'Syne Mono', monospace;
+      text-align: center;
+      outline: none;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+    }
+
+    #wordInput.waiting { opacity: 0.7; border-color: var(--accent2); color: var(--muted); }
+
+    .btn-primary { background: var(--accent); color: var(--bg); font-weight: 800; cursor: pointer; border: none; border-radius: 12px; padding: 1.2rem; }
+    .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); cursor: pointer; border-radius: 12px; padding: 1rem; }
+    
+    .hidden { display: none !important; }
+    #gameOver { text-align: center; }
+    .final-score { font-size: 5rem; color: var(--accent); font-weight: 800; }
+
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; width: 100%; }
+  </style>
+</head>
+<body>
+
+<div id="gameAnnouncer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+<div class="container" role="main">
+  <h1>Word Thread</h1>
+
+  <!-- Main Menu -->
+  <div id="setupScreen">
+    <div class="intro-section">
+      <h2>Welcome to Word Thread</h2>
+      <p>Here’s how to play:</p>
+      <ul class="intro-list">
+        <li><b>Receive:</b> You will be given a random word.</li>
+        <li><b>Weave:</b> Write a new word using the last letter of the word you received to continue the thread.</li>
+        <li><b>No Repeats:</b> Every word must be unique; you cannot use the same word twice in a single game.</li>
+        <li><b>Keep the Flow:</b> Each successful word extends your chain and earns you points.</li>
+      </ul>
+
+      <h3>Customize Your Challenge</h3>
+      <p>Before you begin, use the settings below to tailor your experience:</p>
+      <ul class="intro-list">
+        <li><b>Set the Pace:</b> Adjust the time limit to increase the pressure or enjoy a relaxed "Zen" mode.</li>
+        <li><b>Choose a Category:</b> Pick a specific theme to test your vocabulary.</li>
+      </ul>
+
+      <p>Think fast, stay sharp, and see how long you can keep the thread going. Good luck!</p>
+
+      <div class="accordion-group">
+        <!-- Pace Accordion -->
+        <button id="paceToggle" class="accordion-btn" aria-expanded="false" aria-controls="pacePanel" onclick="toggleAccordion('pace')">
+          <div class="accordion-label">
+            <span class="accordion-title">Set the Pace:</span>
+            <span id="paceSelectionLabel" class="accordion-selection">Normal (15s)</span>
+          </div>
+          <span class="icon" aria-hidden="true">▼</span>
+        </button>
+        <div id="pacePanel" class="accordion-panel" aria-hidden="true">
+          <fieldset>
+            <legend class="sr-only">Choose Difficulty</legend>
+            <div class="cat-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+              <button class="cat-btn diff-btn" data-time="25" data-label="Zen (25s)" aria-pressed="false">Zen <small>25s</small></button>
+              <button class="cat-btn diff-btn active" data-time="15" data-label="Normal (15s)" aria-pressed="true">Normal <small>15s</small></button>
+              <button class="cat-btn diff-btn" data-time="8" data-label="Hard (8s)" aria-pressed="false">Hard <small>8s</small></button>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Category Accordion -->
+        <button id="catToggle" class="accordion-btn" aria-expanded="false" aria-controls="catPanel" onclick="toggleAccordion('cat')">
+          <div class="accordion-label">
+            <span class="accordion-title">Choose a Category:</span>
+            <span id="catSelectionLabel" class="accordion-selection">Any Word</span>
+          </div>
+          <span class="icon" aria-hidden="true">▼</span>
+        </button>
+        <div id="catPanel" class="accordion-panel" aria-hidden="true">
+          <fieldset>
+            <legend class="sr-only">Choose Category</legend>
+            <div class="cat-grid" id="categoryGrid">
+              <button class="cat-btn cat-toggle active" data-cat="any" aria-pressed="true">Any Word</button>
+              <button class="cat-btn cat-toggle" data-cat="animals" aria-pressed="false">Animals</button>
+              <button class="cat-btn cat-toggle" data-cat="food" aria-pressed="false">Food</button>
+              <button class="cat-btn cat-toggle" data-cat="countries" aria-pressed="false">Countries</button>
+              <button class="cat-btn cat-toggle" data-cat="cities" aria-pressed="false">Cities</button>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+    
+    <button class="btn-primary" style="width: 100%; font-size: 1.3rem;" onclick="startGame()">Start Thread</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="hidden">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="scoreDisplay">0</div>
+        <div class="stat-label">Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="streakDisplay">0</div>
+        <div class="stat-label">Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="bestDisplay">0</div>
+        <div class="stat-label">Best</div>
+      </div>
+    </div>
+
+    <div class="timer-wrap" aria-hidden="true"><div id="timerBar" class="timer-bar"></div></div>
+
+    <div id="feedback" style="height: 1.5rem; text-align: center; font-size: 0.9rem; margin-bottom: 0.5rem; font-family: 'Syne Mono', monospace;"></div>
+
+    <div class="status-box" id="statusBox">
+      <span class="label" id="turnLabel" style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.2em;">WAITING</span>
+      <div class="current-word" id="wordDisplay">READY?</div>
+      <div class="label" id="instruction" style="margin-top:0.5rem; color:var(--accent); font-size: 0.7rem; text-transform: uppercase;"></div>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="wordInput" placeholder="Type word & press Enter" autocomplete="off" spellcheck="false" inputmode="text" enterkeyhint="done">
+    </div>
+
+    <div class="btn-row" style="margin-top: 2rem;">
+      <button class="btn-secondary" style="flex:1" onclick="endGame()">Cut Thread</button>
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameOver" class="hidden">
+    <p style="text-transform:uppercase; font-size:0.7rem; color:var(--muted);">Thread Result</p>
+    <div class="final-score" id="finalScore">0</div>
+    <div class="stats" style="margin: 2rem 0;">
+      <div class="stat-card"><div class="stat-value" id="finalWords">0</div><div class="stat-label">Total Words</div></div>
+      <div class="stat-card"><div class="stat-value" id="finalStreak">0</div><div class="stat-label">Max Streak</div></div>
+    </div>
+    <p id="gameOverMsg" style="margin-bottom: 2rem; color: var(--muted);"></p>
+    <div class="btn-row">
+      <button class="btn-primary" style="flex: 1" onclick="startGame()">New Thread</button>
+      <button class="btn-secondary" style="flex: 1" onclick="showSetup()">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wordBanks = {
+  any: ["apple","elephant","tiger","rabbit","lemon","neat","table","eagle","lamp","parrot","tornado","almond","door","ring","game","ear","rock","kite","end","dog","goal","leopard","dandelion","night","thorn","note","echo","ocean","nail","iron","orange","eagle","noodle","emerald","dart","tulip","palm","mango","olive","vine","east","trail","lake","key","yak","kangaroo","open","novel","lamp","plum","mud","dew","walnut","trail","ruby","yarn","nest","silver","rain","name","fog","globe","bronze","zero","owl","web","black","knight","thin","hill","lunch","circle","rice","echo","umbrella","arc","crane","engine","ink","kitten","noon","over","pen","queen","rope","storm","tree","unique","valley","winter","xray","young","zone"],
+  animals: ["ant","tiger","rabbit","bear","rhino","otter","elk","kangaroo","octopus","seal","lion","newt","toad","duck","koala","alpaca","alligator","ram","mole","eagle","eel","lemur","raccoon","narwhal","llama","aardvark","kite","elephant","tapir","reindeer","rat","tortoise","emu","urchin","nightjar","raven","nit","termite","ermine","elk","kingfisher","rook","koi","ibis","salamander","robin","newt","trout","toucan"],
+  food: ["apple","egg","grape","eggplant","tomato","orange","edam","mango","olive","endive","enchilada","avocado","onion","naan","nacho","oat","taco","okra","almond","donut","tiramisu","udon","noodle","lasagna","aloe","enchilada","anchovy","yam","melon","nut","truffle","egg","grapefruit","tofu","ugli","iced tea","almond","date","tart","rice","espresso","omelette","eclair","rye","endive","nectarine"],
+  countries: ["albania","austria","angola","algeria","niger","russia","oman","norway","yemen","nepal","laos","sweden","denmark","kenya","ghana","argentina","nigeria","india","greece","ethiopia","australia","uganda","namibia","brazil","canada","france","germany"],
+  cities: ["amsterdam","dallas","seattle","edinburgh","hamburg","guangzhou","oslo","omaha","athens","stockholm","madrid","delhi","istanbul","london","nairobi","rome","houston","newark","kuwait","toronto","oslo","lima"]
+};
+
+let state = {
+  score: 0,
+  streak: 0,
+  best: 0,
+  used: new Set(),
+  currentLetter: '',
+  timeLimit: 15,
+  timer: null,
+  startTime: null,
+  category: 'any',
+  active: false,
+  isFirstWord: true
+};
+
+const UI = {
+  setup: document.getElementById('setupScreen'),
+  game: document.getElementById('gameScreen'),
+  over: document.getElementById('gameOver'),
+  input: document.getElementById('wordInput'),
+  word: document.getElementById('wordDisplay'),
+  turn: document.getElementById('turnLabel'),
+  instr: document.getElementById('instruction'),
+  feedback: document.getElementById('feedback'),
+  timer: document.getElementById('timerBar'),
+  status: document.getElementById('statusBox'),
+  announcer: document.getElementById('gameAnnouncer'),
+  scoreDisp: document.getElementById('scoreDisplay'),
+  streakDisp: document.getElementById('streakDisplay'),
+  bestDisp: document.getElementById('bestDisplay'),
+  finalWords: document.getElementById('finalWords'),
+  finalStreak: document.getElementById('finalStreak'),
+  finalScore: document.getElementById('finalScore'),
+  paceLabel: document.getElementById('paceSelectionLabel'),
+  catLabel: document.getElementById('catSelectionLabel'),
+  paceToggle: document.getElementById('paceToggle'),
+  catToggle: document.getElementById('catToggle')
+};
+
+function toggleAccordion(type) {
+  const isPace = type === 'pace';
+  const toggle = isPace ? UI.paceToggle : UI.catToggle;
+  const panel = document.getElementById(isPace ? 'pacePanel' : 'catPanel');
+  const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+  
+  const otherToggle = isPace ? UI.catToggle : UI.paceToggle;
+  const otherPanel = document.getElementById(isPace ? 'catPanel' : 'pacePanel');
+  otherToggle.setAttribute('aria-expanded', 'false');
+  otherPanel.setAttribute('aria-hidden', 'true');
+  otherPanel.classList.remove('open');
+
+  const newState = !isExpanded;
+  toggle.setAttribute('aria-expanded', newState);
+  panel.setAttribute('aria-hidden', !newState);
+  panel.classList.toggle('open', newState);
+  
+  if (newState) {
+    announce(`${isPace ? 'Pace' : 'Category'} settings expanded.`);
+    setTimeout(() => {
+      const activeBtn = panel.querySelector('.active');
+      if (activeBtn) activeBtn.focus();
+    }, 50);
+  }
+}
+
+function announce(text) {
+  UI.announcer.textContent = '';
+  setTimeout(() => { UI.announcer.textContent = text; }, 10);
+}
+
+function startGame() {
+  state.score = 0; state.streak = 0; state.used.clear(); state.currentLetter = ''; state.active = true;
+  state.isFirstWord = true;
+  UI.setup.classList.add('hidden');
+  UI.over.classList.add('hidden'); // Clear Game Over screen if starting from there
+  UI.game.classList.remove('hidden');
+  updateStats();
+  UI.input.disabled = false;
+  UI.input.classList.remove('waiting');
+  UI.input.focus();
+  announce("Word Thread started.");
+  computerTurn();
+}
+
+function updateStats() {
+  UI.scoreDisp.textContent = state.score;
+  UI.streakDisp.textContent = state.streak;
+  UI.bestDisp.textContent = state.best;
+}
+
+function computerTurn() {
+  state.active = false;
+  UI.turn.textContent = "THREAD WEAVING...";
+  UI.status.className = 'status-box computer-active';
+  UI.input.classList.add('waiting');
+  UI.input.placeholder = "Thread weaving...";
+  UI.input.value = "";
+  UI.input.focus(); 
+
+  const bank = wordBanks[state.category] || wordBanks.any;
+  const choices = bank.filter(w => (!state.currentLetter || w.startsWith(state.currentLetter)) && !state.used.has(w));
+  
+  if (choices.length === 0) {
+    announce("Computer is stumped! You win!");
+    endGame("Computer ran out of words.");
+    return;
+  }
+  
+  const word = choices[Math.floor(Math.random() * choices.length)];
+  state.used.add(word);
+  state.currentLetter = word[word.length - 1];
+
+  setTimeout(() => {
+    displayWord(word);
+    if (state.isFirstWord) {
+      announce(`The first word is ${word}. Start with ${state.currentLetter.toUpperCase()}.`);
+      state.isFirstWord = false;
+    } else {
+      announce(`Correct. The next word is ${word}. Start with ${state.currentLetter.toUpperCase()}.`);
+    }
+    playerTurn();
+  }, 100);
+}
+
+function playerTurn() {
+  state.active = true;
+  UI.turn.textContent = "YOUR TURN";
+  UI.status.className = 'status-box player-active';
+  UI.input.classList.remove('waiting');
+  UI.input.placeholder = "Extend the thread...";
+  UI.input.focus(); 
+  UI.instr.textContent = `Start with ${state.currentLetter.toUpperCase()}`;
+  startTimer();
+}
+
+function displayWord(word) {
+  UI.word.innerHTML = `${word.slice(0, -1)}<span class="last-letter">${word.slice(-1)}</span>`;
+}
+
+UI.input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (state.active) {
+      const val = UI.input.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+      if (val) validatePlayerWord(val);
+    } else { UI.input.value = ""; }
+  }
+});
+
+function validatePlayerWord(word) {
+  if (word[0] !== state.currentLetter) { endGame(`Thread broken. "${word}" didn't start with ${state.currentLetter.toUpperCase()}.`); return; }
+  if (state.used.has(word)) { endGame(`Thread broken. "${word}" was already used.`); return; }
+  if (state.category !== 'any' && !wordBanks[state.category].includes(word)) { endGame(`Thread broken. "${word}" isn't in the selected category.`); return; }
+
+  stopTimer();
+  state.used.add(word);
+  state.currentLetter = word[word.length - 1];
+  const elapsed = (Date.now() - state.startTime) / 1000;
+  state.score += (10 + Math.max(0, Math.floor((state.timeLimit - elapsed) * 5)));
+  state.streak++;
+  if (state.streak > state.best) state.best = state.streak;
+  updateStats();
+  displayWord(word);
+  computerTurn();
+}
+
+function startTimer() {
+  state.startTime = Date.now();
+  UI.timer.style.width = '100%';
+  UI.timer.classList.remove('warning');
+  let warned = false;
+  if (state.timer) clearInterval(state.timer);
+  state.timer = setInterval(() => {
+    const elapsed = (Date.now() - state.startTime) / 1000;
+    const remaining = Math.max(0, state.timeLimit - elapsed);
+    UI.timer.style.width = (remaining / state.timeLimit) * 100 + '%';
+    if (remaining < state.timeLimit * 0.3) {
+      UI.timer.classList.add('warning');
+      if (!warned) { announce("Time low!"); warned = true; }
+    }
+    if (remaining <= 0) { stopTimer(); endGame("Thread timed out!"); }
+  }, 50);
+}
+
+function stopTimer() { clearInterval(state.timer); }
+
+function endGame(reason) {
+  stopTimer();
+  state.active = false;
+  UI.game.classList.add('hidden');
+  UI.over.classList.remove('hidden');
+  UI.input.disabled = true; UI.input.blur();
+  UI.finalScore.textContent = state.score;
+  UI.finalWords.textContent = state.used.size;
+  UI.finalStreak.textContent = state.best;
+  document.getElementById('gameOverMsg').textContent = reason || "";
+  announce(`Game Over. ${reason}`);
+}
+
+function showSetup() {
+  UI.over.classList.add('hidden'); 
+  UI.game.classList.add('hidden'); 
+  UI.setup.classList.remove('hidden');
+  UI.input.disabled = false; 
+  UI.input.classList.remove('waiting');
+  announce("Main menu.");
+}
+
+function collapseAccordion(type) {
+  const isPace = type === 'pace';
+  const toggle = isPace ? UI.paceToggle : UI.catToggle;
+  const panel = document.getElementById(isPace ? 'pacePanel' : 'catPanel');
+  toggle.setAttribute('aria-expanded', 'false');
+  panel.setAttribute('aria-hidden', 'true');
+  panel.classList.remove('open');
+  toggle.focus();
+}
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
+    state.timeLimit = parseInt(btn.dataset.time);
+    UI.paceLabel.textContent = btn.dataset.label;
+    announce(`Pace: ${btn.dataset.label}`);
+    collapseAccordion('pace');
+  });
+});
+
+document.querySelectorAll('.cat-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-toggle').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true');
+    state.category = btn.dataset.cat;
+    UI.catLabel.textContent = btn.textContent.trim();
+    announce(`Category: ${btn.textContent.trim()}`);
+    collapseAccordion('cat');
+  });
+});
+
+window.onload = () => { announce("Word Thread loaded."); };
+</script>
+</body>
+</html>
+
