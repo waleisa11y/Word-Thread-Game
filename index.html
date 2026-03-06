@@ -115,8 +115,6 @@
 
     .intro-list b { color: var(--text); }
 
-    .accordion-group { margin-top: 1rem; }
-
     .accordion-btn {
       width: 100%;
       background: var(--bg);
@@ -288,7 +286,6 @@
     .hidden { display: none !important; }
     #gameOver { text-align: center; }
     .final-score { font-size: 5rem; color: var(--accent); font-weight: 800; }
-
     .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; width: 100%; }
   </style>
 </head>
@@ -325,7 +322,7 @@
         <button id="paceToggle" class="accordion-btn" aria-expanded="false" aria-controls="pacePanel" onclick="toggleAccordion('pace')">
           <div class="accordion-label">
             <span class="accordion-title">Set the Pace:</span>
-            <span id="paceSelectionLabel" class="accordion-selection">Normal (15s)</span>
+            <span id="paceSelectionLabel" class="accordion-selection">Normal (25 seconds)</span>
           </div>
           <span class="icon" aria-hidden="true">▼</span>
         </button>
@@ -333,9 +330,9 @@
           <fieldset>
             <legend class="sr-only">Choose Difficulty</legend>
             <div class="cat-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-              <button class="cat-btn diff-btn" data-time="25" data-label="Zen (25s)" aria-pressed="false">Zen <small>25s</small></button>
-              <button class="cat-btn diff-btn active" data-time="15" data-label="Normal (15s)" aria-pressed="true">Normal <small>15s</small></button>
-              <button class="cat-btn diff-btn" data-time="8" data-label="Hard (8s)" aria-pressed="false">Hard <small>8s</small></button>
+              <button class="cat-btn diff-btn" data-time="60" data-label="Zen (60 seconds)" aria-pressed="false">Zen <small>60 seconds</small></button>
+              <button class="cat-btn diff-btn active" data-time="25" data-label="Normal (25 seconds)" aria-pressed="true">Normal <small>25 seconds</small></button>
+              <button class="cat-btn diff-btn" data-time="15" data-label="Hard (15 seconds)" aria-pressed="false">Hard <small>15 seconds</small></button>
             </div>
           </fieldset>
         </div>
@@ -369,27 +366,17 @@
   <!-- Game Screen -->
   <div id="gameScreen" class="hidden">
     <div class="stats">
-      <div class="stat-card">
-        <div class="stat-value" id="scoreDisplay">0</div>
-        <div class="stat-label">Score</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="streakDisplay">0</div>
-        <div class="stat-label">Streak</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="bestDisplay">0</div>
-        <div class="stat-label">Best</div>
-      </div>
+      <div class="stat-card"><div class="stat-value" id="scoreDisplay">0</div><div class="stat-label">Score</div></div>
+      <div class="stat-card"><div class="stat-value" id="streakDisplay">0</div><div class="stat-label">Streak</div></div>
+      <div class="stat-card"><div class="stat-value" id="bestDisplay">0</div><div class="stat-label">Best</div></div>
     </div>
 
     <div class="timer-wrap" aria-hidden="true"><div id="timerBar" class="timer-bar"></div></div>
-
     <div id="feedback" style="height: 1.5rem; text-align: center; font-size: 0.9rem; margin-bottom: 0.5rem; font-family: 'Syne Mono', monospace;"></div>
 
     <div class="status-box" id="statusBox">
       <span class="label" id="turnLabel" style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.2em;">WAITING</span>
-      <div class="current-word" id="wordDisplay">READY?</div>
+      <div class="current-word" id="wordDisplay" role="text">READY?</div>
       <div class="label" id="instruction" style="margin-top:0.5rem; color:var(--accent); font-size: 0.7rem; text-transform: uppercase;"></div>
     </div>
 
@@ -397,7 +384,7 @@
       <input type="text" id="wordInput" placeholder="Type word & press Enter" autocomplete="off" spellcheck="false" inputmode="text" enterkeyhint="done">
     </div>
 
-    <div class="btn-row" style="margin-top: 2rem;">
+    <div class="btn-row">
       <button class="btn-secondary" style="flex:1" onclick="endGame()">Cut Thread</button>
     </div>
   </div>
@@ -419,10 +406,14 @@
 </div>
 
 <script>
+const phonetics = {
+  a: "alpha", b: "bravo", c: "charlie", d: "delta", e: "echo", f: "foxtrot", g: "golf", h: "hotel", i: "india", j: "juliett", k: "kilo", l: "lima", m: "mike", n: "november", o: "oscar", p: "papa", q: "quebec", r: "romeo", s: "sierra", t: "tango", u: "uniform", v: "victor", w: "whiskey", x: "x-ray", y: "yankee", z: "zulu"
+};
+
 const wordBanks = {
   any: ["apple","elephant","tiger","rabbit","lemon","neat","table","eagle","lamp","parrot","tornado","almond","door","ring","game","ear","rock","kite","end","dog","goal","leopard","dandelion","night","thorn","note","echo","ocean","nail","iron","orange","eagle","noodle","emerald","dart","tulip","palm","mango","olive","vine","east","trail","lake","key","yak","kangaroo","open","novel","lamp","plum","mud","dew","walnut","trail","ruby","yarn","nest","silver","rain","name","fog","globe","bronze","zero","owl","web","black","knight","thin","hill","lunch","circle","rice","echo","umbrella","arc","crane","engine","ink","kitten","noon","over","pen","queen","rope","storm","tree","unique","valley","winter","xray","young","zone"],
   animals: ["ant","tiger","rabbit","bear","rhino","otter","elk","kangaroo","octopus","seal","lion","newt","toad","duck","koala","alpaca","alligator","ram","mole","eagle","eel","lemur","raccoon","narwhal","llama","aardvark","kite","elephant","tapir","reindeer","rat","tortoise","emu","urchin","nightjar","raven","nit","termite","ermine","elk","kingfisher","rook","koi","ibis","salamander","robin","newt","trout","toucan"],
-  food: ["apple","egg","grape","eggplant","tomato","orange","edam","mango","olive","endive","enchilada","avocado","onion","naan","nacho","oat","taco","okra","almond","donut","tiramisu","udon","noodle","lasagna","aloe","enchilada","anchovy","yam","melon","nut","truffle","egg","grapefruit","tofu","ugli","iced tea","almond","date","tart","rice","espresso","omelette","eclair","rye","endive","nectarine"],
+  food: ["abalone","acai","acerola","adobo","aioli","ajwain","ale","aleppo","alfalfa","alfredo","allspice","almond","amaranth","anchovy","andouille","anise","annatto","antipasto","apple","apricot","arancini","arugula","arborio","artichoke","asafoetida","asiago","asparagus","avocado","baba","babaganoush","bacon","bagel","baguette","bake","baklava","balsamic","bamboo","banana","barbecue","barberry","barley","basil","basmati","bean","bechamel","beef","beer","beet","beluga","berry","biryani","biscuit","bison","bisque","blanch","blackbean","blackberry","blackcurrant","blackpepper","blueberry","boil","bokchoy","bologna","bolognese","bonito","borscht","bouillabaisse","bouillon","bourbon","braise","bran","bratwurst","bread","breadcrumb","breakfast","brie","brisket","broil","broccoli","broth","brownie","brunch","bruschetta","buckwheat","bulgur","bun","burger","burrata","burrito","butter","buttermilk","butternut","cabbage","cacao","cajeta","cake","calamari","camembert","candy","cannoli","canola","cantaloupe","caper","caprese","capsicum","caramel","caraway","cardamom","carob","carrot","cashew","cassava","casserole","caviar","cayenne","celery","ceviche","chai","challah","chamomile","chard","cheddar","cheese","cheesecake","cherry","chestnut","chickpea","chicken","chicory","chili","chilli","chipotle","chive","chocolate","chowder","chutney","ciabatta","cider","cilantro","cinnamon","citron","clam","clove","cobbler","cocoa","coconut","cod","coddle","coffee","coke","coleslaw","collard","condiment","congee","cookie","coriander","corn","cornbread","cornmeal","cottage","couscous","crab","cracker","cranberry","cream","crepe","cress","croissant","crouton","crust","cucumber","cumin","cupcake","curd","cure","curry","custard","daikon","dashi","date","deli","dessert","dew","dill","dip","dosa","donut","dough","dressing","duck","dumpling","durian","eclair","edamame","eel","egg","eggplant","eggnog","einkorn","elderberry","emmental","enchilada","endive","espresso","falafel","fanta","farro","fennel","feta","fig","filet","fish","flatbread","flambe","flax","flour","fondant","fondue","frangipane","frappe","frittata","frosting","fruit","fry","fries","fudge","fusilli","ganache","garam","garbanzo","garlic","gelato","gin","ginger","gnocchi","goat","gouda","grain","granola","grape","grapefruit","gravy","guacamole","guava","gyoza","gyro","habanero","halloumi","ham","hamburger","harissa","hazelnut","herb","honey","horchata","horseradish","hummus","ice","icecream","icing","infuse","jalapeno","jam","jasmine","jerky","jicama","juice","kale","kimchi","kiwi","kohlrabi","ketchup","kebab","kefir","keto","kimbap","kitchen","knish","kofta","kombucha","kumquat","lamb","lasagna","latte","leek","legume","lemon","lemonade","lemongrass","lentil","lettuce","lime","limeade","lobster","loaf","lollipop","lox","macaron","macaroni","mackerel","mango","maple","marinade","marjoram","marmalade","marzipan","masala","matcha","mayonnaise","mayo","mead","meal","meat","meatball","meringue","milk","milkshake","millet","miso","mochi","molasses","mole","mousse","mozzarella","muffin","mushroom","mustard","naan","nacho","nectar","nectarine","nightshade","noodle","nougat","nut","nutmeg","oat","octopus","oil","okra","olive","omelet","onion","orange","oregano","oyster","pancake","panna","papaya","paprika","parmesan","parsley","pasta","pastry","pavlova","pea","peach","peanut","pear","pecan","pepsi","pepper","peppercorn","pepperoni","persimmon","pesto","pickle","pie","pigeonpea","pimento","pineapple","pistachio","pita","pizza","plantain","plum","poach","polenta","pomegranate","pork","porridge","potato","poutine","praline","pretzel","profiterole","prosciutto","protein","prune","pudding","pulp","pumpkin","punch","quail","quesadilla","quiche","quinoa","radish","raisin","ramen","ranch","raspberry","ravioli","relish","rice","ricotta","risotto","roast","rosemary","rotisserie","rum","rugula","rye","saffron","sage","sake","salad","salami","salmon","salsa","salt","sandwich","sardine","sauce","sausage","saute","scallion","scone","seafood","sear","seasoning","seitan","seltzer","sesame","shallot","sherbet","shiitake","shrimp","simmer","sirloin","sizzle","soba","soda","sorbet","sorghum","souffle","soup","soy","sprite","spaghetti","spice","spinach","sriracha","steak","steam","stew","stout","strawberry","strudel","smoke","sugar","sushi","sweetener","taco","tahini","tamarind","tapioca","tarragon","tart","tea","tempeh","tenderloin","thyme","tiramisu","tofu","tomato","tonic","torte","tortilla","toast","trifle","truffle","tuna","turkey","turmeric","turnip","ube","udon","ugli","umami","unagi","vanilla","vegan","vegetable","vegetarian","vinegar","vodka","waffle","walnut","water","watermelon","wheat","whiskey","wine","yam","yeast","yogurt","yolk","zucchini"],
   countries: ["albania","austria","angola","algeria","niger","russia","oman","norway","yemen","nepal","laos","sweden","denmark","kenya","ghana","argentina","nigeria","india","greece","ethiopia","australia","uganda","namibia","brazil","canada","france","germany"],
   cities: ["amsterdam","dallas","seattle","edinburgh","hamburg","guangzhou","oslo","omaha","athens","stockholm","madrid","delhi","istanbul","london","nairobi","rome","houston","newark","kuwait","toronto","oslo","lima"]
 };
@@ -433,7 +424,7 @@ let state = {
   best: 0,
   used: new Set(),
   currentLetter: '',
-  timeLimit: 15,
+  timeLimit: 25,
   timer: null,
   startTime: null,
   category: 'any',
@@ -449,7 +440,6 @@ const UI = {
   word: document.getElementById('wordDisplay'),
   turn: document.getElementById('turnLabel'),
   instr: document.getElementById('instruction'),
-  feedback: document.getElementById('feedback'),
   timer: document.getElementById('timerBar'),
   status: document.getElementById('statusBox'),
   announcer: document.getElementById('gameAnnouncer'),
@@ -483,10 +473,9 @@ function toggleAccordion(type) {
   panel.classList.toggle('open', newState);
   
   if (newState) {
-    announce(`${isPace ? 'Pace' : 'Category'} settings expanded.`);
     setTimeout(() => {
-      const activeBtn = panel.querySelector('.active');
-      if (activeBtn) activeBtn.focus();
+      const firstBtn = panel.querySelector('button');
+      if (firstBtn) firstBtn.focus();
     }, 50);
   }
 }
@@ -500,7 +489,7 @@ function startGame() {
   state.score = 0; state.streak = 0; state.used.clear(); state.currentLetter = ''; state.active = true;
   state.isFirstWord = true;
   UI.setup.classList.add('hidden');
-  UI.over.classList.add('hidden'); // Clear Game Over screen if starting from there
+  UI.over.classList.add('hidden');
   UI.game.classList.remove('hidden');
   updateStats();
   UI.input.disabled = false;
@@ -540,12 +529,17 @@ function computerTurn() {
 
   setTimeout(() => {
     displayWord(word);
+    
+    const targetLetter = state.currentLetter.toUpperCase();
+    const phonetic = phonetics[state.currentLetter.toLowerCase()];
+    
     if (state.isFirstWord) {
-      announce(`The first word is ${word}. Start with ${state.currentLetter.toUpperCase()}.`);
+      announce(`The first word is ${word}. Start with ${targetLetter} as in ${phonetic}.`);
       state.isFirstWord = false;
     } else {
-      announce(`Correct. The next word is ${word}. Start with ${state.currentLetter.toUpperCase()}.`);
+      announce(`Correct. The next word is ${word}. Start with ${targetLetter} as in ${phonetic}.`);
     }
+    
     playerTurn();
   }, 100);
 }
@@ -562,7 +556,20 @@ function playerTurn() {
 }
 
 function displayWord(word) {
-  UI.word.innerHTML = `${word.slice(0, -1)}<span class="last-letter">${word.slice(-1)}</span>`;
+  UI.word.innerHTML = "";
+  UI.word.setAttribute("aria-label", word);
+  
+  const visualWrapper = document.createElement("span");
+  visualWrapper.setAttribute("aria-hidden", "true");
+  
+  const wordStart = document.createTextNode(word.slice(0, -1));
+  const lastLetterSpan = document.createElement("span");
+  lastLetterSpan.className = "last-letter";
+  lastLetterSpan.textContent = word.slice(-1);
+  
+  visualWrapper.appendChild(wordStart);
+  visualWrapper.appendChild(lastLetterSpan);
+  UI.word.appendChild(visualWrapper);
 }
 
 UI.input.addEventListener('keydown', (e) => {
@@ -577,7 +584,12 @@ UI.input.addEventListener('keydown', (e) => {
 function validatePlayerWord(word) {
   if (word[0] !== state.currentLetter) { endGame(`Thread broken. "${word}" didn't start with ${state.currentLetter.toUpperCase()}.`); return; }
   if (state.used.has(word)) { endGame(`Thread broken. "${word}" was already used.`); return; }
-  if (state.category !== 'any' && !wordBanks[state.category].includes(word)) { endGame(`Thread broken. "${word}" isn't in the selected category.`); return; }
+  
+  const bank = wordBanks[state.category] || wordBanks.any;
+  if (state.category !== 'any' && !bank.includes(word)) { 
+    endGame(`Thread broken. "${word}" isn't in the selected category.`); 
+    return; 
+  }
 
   stopTimer();
   state.used.add(word);
