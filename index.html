@@ -111,9 +111,11 @@
     .intro-list li {
       margin-bottom: 0.75rem;
       color: var(--muted);
+      display: flex;
+      gap: 8px;
     }
 
-    .intro-list b { color: var(--text); }
+    .intro-list b { color: var(--text); white-space: nowrap; }
 
     .accordion-btn {
       width: 100%;
@@ -129,7 +131,7 @@
       font-weight: 700;
       text-align: left;
       transition: all 0.2s;
-      margin-top: 0.75rem;
+      margin: 0.75rem 0 1.25rem 0;
       border-radius: 12px;
       outline: none;
     }
@@ -139,6 +141,7 @@
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
       border-color: var(--accent);
+      margin-bottom: 0;
     }
 
     .accordion-label { display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
@@ -152,6 +155,7 @@
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
       padding: 1.5rem;
+      margin-bottom: 1.25rem;
       display: none;
     }
 
@@ -279,7 +283,7 @@
 
     #wordInput.waiting { opacity: 0.7; border-color: var(--accent2); color: var(--muted); }
 
-    .btn-primary { background: var(--accent); color: var(--bg); font-weight: 800; cursor: pointer; border: none; border-radius: 12px; padding: 1.2rem; }
+    .btn-primary { background: var(--accent); color: var(--bg); font-weight: 800; cursor: pointer; border: none; border-radius: 12px; padding: 1.2rem; width: 100%; font-size: 1.3rem; }
     .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
     .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); cursor: pointer; border-radius: 12px; padding: 1rem; }
     
@@ -287,6 +291,13 @@
     #gameOver { text-align: center; }
     .final-score { font-size: 5rem; color: var(--accent); font-weight: 800; }
     .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; width: 100%; }
+
+    .suggestion-text {
+      margin-top: 1rem;
+      color: var(--text);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
@@ -304,24 +315,20 @@
       <ul class="intro-list">
         <li><b>Receive:</b> You will be given a random word.</li>
         <li><b>Weave:</b> Write a new word using the last letter of the word you received to continue the thread.</li>
+        <li><b>Singular Focus:</b> Only single words in the singular form are allowed.</li>
         <li><b>No Repeats:</b> Every word must be unique; you cannot use the same word twice in a single game.</li>
         <li><b>Keep the Flow:</b> Each successful word extends your chain and earns you points.</li>
       </ul>
 
       <h3>Customize Your Challenge</h3>
-      <p>Before you begin, use the settings below to tailor your experience:</p>
-      <ul class="intro-list">
-        <li><b>Set the Pace:</b> Adjust the time limit to increase the pressure or enjoy a relaxed "Zen" mode.</li>
-        <li><b>Choose a Category:</b> Pick a specific theme to test your vocabulary.</li>
-      </ul>
+      <p style="margin-bottom: 1rem;">Before you begin, use the following settings to tailor your experience:</p>
 
-      <p>Think fast, stay sharp, and see how long you can keep the thread going. Good luck!</p>
-
-      <div class="accordion-group">
-        <!-- Pace Accordion -->
+      <div class="setting-block">
+        <p><b>Set the Pace:</b> Adjust the time limit to increase the pressure or enjoy a relaxed "Zen" mode.</p>
+        
         <button id="paceToggle" class="accordion-btn" aria-expanded="false" aria-controls="pacePanel" onclick="toggleAccordion('pace')">
           <div class="accordion-label">
-            <span class="accordion-title">Set the Pace:</span>
+            <span class="accordion-title">Pace:</span>
             <span id="paceSelectionLabel" class="accordion-selection">Normal (25 seconds)</span>
           </div>
           <span class="icon" aria-hidden="true">▼</span>
@@ -336,11 +343,14 @@
             </div>
           </fieldset>
         </div>
+      </div>
 
-        <!-- Category Accordion -->
+      <div class="setting-block">
+        <p><b>Choose a Category:</b> Pick a specific theme like Animals, Food, or Countries to test your vocabulary in a focused way.</p>
+
         <button id="catToggle" class="accordion-btn" aria-expanded="false" aria-controls="catPanel" onclick="toggleAccordion('cat')">
           <div class="accordion-label">
-            <span class="accordion-title">Choose a Category:</span>
+            <span class="accordion-title">Category:</span>
             <span id="catSelectionLabel" class="accordion-selection">Any Word</span>
           </div>
           <span class="icon" aria-hidden="true">▼</span>
@@ -358,9 +368,11 @@
           </fieldset>
         </div>
       </div>
+
+      <p>Think fast, stay sharp, and see how long you can keep the thread going. Good luck!</p>
     </div>
     
-    <button class="btn-primary" style="width: 100%; font-size: 1.3rem;" onclick="startGame()">Start Thread</button>
+    <button class="btn-primary" onclick="startGame()">Start Thread</button>
   </div>
 
   <!-- Game Screen -->
@@ -384,7 +396,7 @@
       <input type="text" id="wordInput" placeholder="Type word & press Enter" autocomplete="off" spellcheck="false" inputmode="text" enterkeyhint="done">
     </div>
 
-    <div class="btn-row">
+    <div class="btn-row" style="margin-top: 2rem;">
       <button class="btn-secondary" style="flex:1" onclick="endGame()">Cut Thread</button>
     </div>
   </div>
@@ -397,7 +409,8 @@
       <div class="stat-card"><div class="stat-value" id="finalWords">0</div><div class="stat-label">Total Words</div></div>
       <div class="stat-card"><div class="stat-value" id="finalStreak">0</div><div class="stat-label">Max Streak</div></div>
     </div>
-    <p id="gameOverMsg" style="margin-bottom: 2rem; color: var(--muted);"></p>
+    <p id="gameOverMsg" style="margin-bottom: 1rem; color: var(--muted);"></p>
+    <p id="wordSuggestion" class="suggestion-text"></p>
     <div class="btn-row">
       <button class="btn-primary" style="flex: 1" onclick="startGame()">New Thread</button>
       <button class="btn-secondary" style="flex: 1" onclick="showSetup()">Main Menu</button>
@@ -412,8 +425,8 @@ const phonetics = {
 
 const wordBanks = {
   any: ["apple","elephant","tiger","rabbit","lemon","neat","table","eagle","lamp","parrot","tornado","almond","door","ring","game","ear","rock","kite","end","dog","goal","leopard","dandelion","night","thorn","note","echo","ocean","nail","iron","orange","eagle","noodle","emerald","dart","tulip","palm","mango","olive","vine","east","trail","lake","key","yak","kangaroo","open","novel","lamp","plum","mud","dew","walnut","trail","ruby","yarn","nest","silver","rain","name","fog","globe","bronze","zero","owl","web","black","knight","thin","hill","lunch","circle","rice","echo","umbrella","arc","crane","engine","ink","kitten","noon","over","pen","queen","rope","storm","tree","unique","valley","winter","xray","young","zone"],
-  animals: ["ant","tiger","rabbit","bear","rhino","otter","elk","kangaroo","octopus","seal","lion","newt","toad","duck","koala","alpaca","alligator","ram","mole","eagle","eel","lemur","raccoon","narwhal","llama","aardvark","kite","elephant","tapir","reindeer","rat","tortoise","emu","urchin","nightjar","raven","nit","termite","ermine","elk","kingfisher","rook","koi","ibis","salamander","robin","newt","trout","toucan"],
-  food: ["abalone","acai","acerola","adobo","aioli","ajwain","ale","aleppo","alfalfa","alfredo","allspice","almond","amaranth","anchovy","andouille","anise","annatto","antipasto","apple","apricot","arancini","arugula","arborio","artichoke","asafoetida","asiago","asparagus","avocado","baba","babaganoush","bacon","bagel","baguette","bake","baklava","balsamic","bamboo","banana","barbecue","barberry","barley","basil","basmati","bean","bechamel","beef","beer","beet","beluga","berry","biryani","biscuit","bison","bisque","blanch","blackbean","blackberry","blackcurrant","blackpepper","blueberry","boil","bokchoy","bologna","bolognese","bonito","borscht","bouillabaisse","bouillon","bourbon","braise","bran","bratwurst","bread","breadcrumb","breakfast","brie","brisket","broil","broccoli","broth","brownie","brunch","bruschetta","buckwheat","bulgur","bun","burger","burrata","burrito","butter","buttermilk","butternut","cabbage","cacao","cajeta","cake","calamari","camembert","candy","cannoli","canola","cantaloupe","caper","caprese","capsicum","caramel","caraway","cardamom","carob","carrot","cashew","cassava","casserole","caviar","cayenne","celery","ceviche","chai","challah","chamomile","chard","cheddar","cheese","cheesecake","cherry","chestnut","chickpea","chicken","chicory","chili","chilli","chipotle","chive","chocolate","chowder","chutney","ciabatta","cider","cilantro","cinnamon","citron","clam","clove","cobbler","cocoa","coconut","cod","coddle","coffee","coke","coleslaw","collard","condiment","congee","cookie","coriander","corn","cornbread","cornmeal","cottage","couscous","crab","cracker","cranberry","cream","crepe","cress","croissant","crouton","crust","cucumber","cumin","cupcake","curd","cure","curry","custard","daikon","dashi","date","deli","dessert","dew","dill","dip","dosa","donut","dough","dressing","duck","dumpling","durian","eclair","edamame","eel","egg","eggplant","eggnog","einkorn","elderberry","emmental","enchilada","endive","espresso","falafel","fanta","farro","fennel","feta","fig","filet","fish","flatbread","flambe","flax","flour","fondant","fondue","frangipane","frappe","frittata","frosting","fruit","fry","fries","fudge","fusilli","ganache","garam","garbanzo","garlic","gelato","gin","ginger","gnocchi","goat","gouda","grain","granola","grape","grapefruit","gravy","guacamole","guava","gyoza","gyro","habanero","halloumi","ham","hamburger","harissa","hazelnut","herb","honey","horchata","horseradish","hummus","ice","icecream","icing","infuse","jalapeno","jam","jasmine","jerky","jicama","juice","kale","kimchi","kiwi","kohlrabi","ketchup","kebab","kefir","keto","kimbap","kitchen","knish","kofta","kombucha","kumquat","lamb","lasagna","latte","leek","legume","lemon","lemonade","lemongrass","lentil","lettuce","lime","limeade","lobster","loaf","lollipop","lox","macaron","macaroni","mackerel","mango","maple","marinade","marjoram","marmalade","marzipan","masala","matcha","mayonnaise","mayo","mead","meal","meat","meatball","meringue","milk","milkshake","millet","miso","mochi","molasses","mole","mousse","mozzarella","muffin","mushroom","mustard","naan","nacho","nectar","nectarine","nightshade","noodle","nougat","nut","nutmeg","oat","octopus","oil","okra","olive","omelet","onion","orange","oregano","oyster","pancake","panna","papaya","paprika","parmesan","parsley","pasta","pastry","pavlova","pea","peach","peanut","pear","pecan","pepsi","pepper","peppercorn","pepperoni","persimmon","pesto","pickle","pie","pigeonpea","pimento","pineapple","pistachio","pita","pizza","plantain","plum","poach","polenta","pomegranate","pork","porridge","potato","poutine","praline","pretzel","profiterole","prosciutto","protein","prune","pudding","pulp","pumpkin","punch","quail","quesadilla","quiche","quinoa","radish","raisin","ramen","ranch","raspberry","ravioli","relish","rice","ricotta","risotto","roast","rosemary","rotisserie","rum","rugula","rye","saffron","sage","sake","salad","salami","salmon","salsa","salt","sandwich","sardine","sauce","sausage","saute","scallion","scone","seafood","sear","seasoning","seitan","seltzer","sesame","shallot","sherbet","shiitake","shrimp","simmer","sirloin","sizzle","soba","soda","sorbet","sorghum","souffle","soup","soy","sprite","spaghetti","spice","spinach","sriracha","steak","steam","stew","stout","strawberry","strudel","smoke","sugar","sushi","sweetener","taco","tahini","tamarind","tapioca","tarragon","tart","tea","tempeh","tenderloin","thyme","tiramisu","tofu","tomato","tonic","torte","tortilla","toast","trifle","truffle","tuna","turkey","turmeric","turnip","ube","udon","ugli","umami","unagi","vanilla","vegan","vegetable","vegetarian","vinegar","vodka","waffle","walnut","water","watermelon","wheat","whiskey","wine","yam","yeast","yogurt","yolk","zucchini"],
+  animals: ["aardvark","aardwolf","addax","agouti","alligator","alpaca","anaconda","anemone","angelfish","anoa","ant","argonaut","armadillo","axolotl","baboon","badger","banteng","barnacle","barracuda","basilisk","bat","bear","bee","beetle","bharal","bilby","binturong","bison","blesbok","bluebottle","bluejay","bobcat","bongo","bontebok","brolga","buffalo","bullfrog","bushbuck","butterfly","cacomistle","camel","canary","capybara","caracal","cardinal","caribou","cassowary","cat","catfish","centipede","chameleon","chamois","cheetah","chevrotain","chimpanzee","chinchilla","chipmunk","cicada","civet","clam","coati","cockatoo","cockroach","colugo","condor","coral","cougar","cow","coyote","crab","crane","cricket","crocodile","crow","cuckoo","curlew","cuscus","cusimanse","cuttlefish","deer","degu","desman","dhole","dikdik","dingo","dog","dolphin","dragonfly","drongo","duck","dugong","duiker","eagle","echidna","eel","eland","elephant","elk","emu","ermine","falcon","fennec","ferret","finch","firefly","flamingo","fly","fossa","fox","frog","galago","gaur","gazelle","gecko","gemsbok","genet","gerenuk","giraffe","goat","goose","gopher","goral","gorilla","grasshopper","grouse","grysbok","guanaco","gull","gundi","guppy","hagfish","halibut","hamster","hare","hartebeest","hawk","hedgehog","heron","hippo","hoatzin","horse","hummingbird","hydra","hyena","hyrax","ibex","ibis","indri","iguana","impala","jackal","jaguar","jellyfish","jerboa","kakapo","kangaroo","kea","kestrel","kingfisher","kinkajou","kite","kiwi","klipspringer","koala","koi","kookaburra","kouprey","krill","kudu","lamprey","langur","lark","lechwe","lemur","leopard","limpet","linnet","lion","lizard","llama","lobster","lynx","macaw","magpie","mallard","mamba","manatee","mara","markhor","marmot","meerkat","millipede","mink","mole","monkey","mongoose","moose","mosquito","moth","mouflon","mouse","mudskipper","mule","muntjac","muskox","muskrat","narwhal","nautilus","newt","nighthawk","nightingale","nightjar","nilgai","nit","nudibranch","nutria","nyala","ocelot","octopus","okapi","onager","opossum","orangutan","oribi","oryx","osprey","ostrich","otter","owl","oyster","panda","pangolin","panther","parrot","partridge","peacock","peafowl","pelican","penguin","pheasant","pig","pika","piranha","planarian","platypus","polecat","porcupine","porpoise","possum","potto","prawn","puffin","puku","puma","python","quail","quelea","quokka","quoll","rabbit","raccoon","rakali","ram","rat","rattlesnake","raven","ray","reedbuck","reindeer","rhea","rhebok","rhino","robin","roebuck","rook","sable","saiga","salamander","salmon","saola","scallop","scorpion","seahorse","seal","seladang","serow","serval","shark","sheep","shrimp","shrew","shrike","siamang","sifaka","sitatunga","skink","skylark","sloth","slug","snail","snake","snipe","sole","solenodon","sparrow","sparrowhawk","spider","spoonbill","springbok","springhare","squirrel","starfish","starling","steenbok","stingray","stoat","stork","sturgeon","sunbear","sunfish","swallow","swan","swift","swordfish","tadpole","takin","tamandua","tapir","tarantula","tardigrade","tarpan","tarsier","tayra","teal","tenrec","termite","tern","thrush","tick","tiger","toad","topi","tortoise","toucan","treefrog","treeshrew","trout","tsessebe","tuatara","tufteddeer","tuna","turtle","urchin","vicuna","viper","vole","vulture","wallaby","walrus","warbler","warthog","wasp","waterbuck","weasel","weaver","whale","whippet","wildcat","wildebeest","wolf","wombat","woodcock","woodlark","woodpecker","worm","yak","yapok","zebra","zebu","zorilla"],
+  food: ["abalone","acai","acerola","adobo","aioli","ajwain","ale","aleppo","alfalfa","alfredo","allspice","almond","amaranth","anchovy","andouille","anise","annatto","antipasto","apple","apricot","arancini","arugula","arborio","artichoke","asafoetida","asiago","asparagus","avocado","baba","babaganoush","bacon","bagel","baguette","bake","baklava","balsamic","bamboo","banana","barbecue","barberry","barley","basil","basmati","bean","bechamel","beef","beer","beet","beluga","berry","biryani","biscuit","bison","bisque","blanch","blackbean","blackberry","blackcurrant","blackpepper","blueberry","boil","bokchoy","bologna","bolognese","bonito","borscht","bouillabaisse","bouillon","bourbon","braise","bran","bratwurst","bread","breadcrumb","breakfast","brie","brisket","broil","broccoli","broth","brownie","brunch","bruschetta","buckwheat","bulgur","bun","burger","burrata","burrito","butter","buttermilk","butternut","cabbage","cacao","cajeta","cake","calamari","camembert","candy","cannoli","canola","cantaloupe","caper","caprese","capsicum","caramel","caraway","cardamom","carob","carrot","cashew","cassava","casserole","caviar","cayenne","celery","ceviche","chai","challah","chamomile","chard","cheddar","cheese","cheesecake","cherry","chestnut","chickpea","chicken","chicory","chili","chilli","chipotle","chive","chocolate","chowder","chutney","ciabatta","cider","cilantro","cinnamon","citron","clam","clove","cobbler","cocoa","coconut","cod","coddle","coffee","coke","coleslaw","collard","condiment","congee","cookie","coriander","corn","cornbread","cornmeal","cottage","couscous","crab","cracker","cranberry","cream","crepe","cress","croissant","crouton","crust","cucumber","cumin","cupcake","curd","cure","curry","custard","daikon","dashi","date","deli","dessert","dew","dill","dip","dosa","donut","dough","dressing","duck","dumpling","durian","eclair","edamame","eel","egg","eggplant","eggnog","einkorn","elderberry","emmental","enchilada","endive","espresso","falafel","fanta","farro","fennel","feta","fig","filet","fish","flatbread","flambe","flax","flour","fondant","fondue","frangipane","frappe","frittata","frosting","fruit","fry","fudge","fusilli","ganache","garam","garbanzo","garlic","gelato","gin","ginger","gnocchi","goat","gouda","grain","granola","grape","grapefruit","gravy","guacamole","guava","gyoza","gyro","habanero","halloumi","ham","hamburger","harissa","hazelnut","herb","honey","horchata","horseradish","hummus","ice","icecream","icing","infuse","jalapeno","jam","jasmine","jerky","jicama","juice","kale","kimchi","kiwi","kohlrabi","kombucha","ketchup","kebab","kefir","keto","kimbap","kitchen","knish","kofta","kombucha","kumquat","lamb","lager","lasagna","latte","leek","legume","lemon","lemonade","lemongrass","lentil","lettuce","lime","limeade","lobster","loaf","lollipop","lox","macaron","macaroni","mackerel","mango","maple","marinade","marjoram","marjoralade","marzipan","masala","matcha","mayonnaise","mayo","mead","meal","meat","meatball","meringue","milk","milkshake","millet","miso","mochi","molasses","mole","mousse","mozzarella","muffin","mushroom","mustard","naan","nacho","nectar","nectarine","nightshade","noodle","nougat","nut","nutmeg","oat","octopus","oil","okra","olive","omelet","onion","orange","oregano","oyster","pancake","panna","papaya","paprika","parmesan","parsley","pasta","pastry","pavlova","pea","peach","peanut","pear","pecan","pepsi","pepper","peppercorn","pepperoni","persimmon","pesto","pickle","pie","pigeonpea","pimento","pineapple","pistachio","pita","pizza","plantain","plum","poach","polenta","pomegranate","pork","porridge","potato","poutine","praline","pretzel","profiterole","prosciutto","protein","prune","pudding","pulp","pumpkin","punch","quail","quesadilla","quiche","quinoa","radish","raisin","ramen","ranch","raspberry","ravioli","relish","rice","ricotta","risotto","roast","rosemary","rotisserie","rum","rugula","rye","saffron","sage","sake","salad","salami","salmon","salsa","salt","sandwich","sardine","sauce","sausage","saute","scallion","scone","seafood","sear","seasoning","seitan","seltzer","sesame","shallot","sherbet","shiitake","shrimp","simmer","sirloin","sizzle","soba","soda","sorbet","sorghum","souffle","soup","soy","sprite","spaghetti","spice","spinach","sriracha","steak","steam","stew","stout","strawberry","strudel","smoke","sugar","sushi","sweetener","taco","tahini","tamarind","tapioca","tarragon","tart","tea","tempeh","tenderloin","thyme","tiramisu","tofu","tomato","tonic","torte","tortilla","toast","trifle","truffle","tuna","turkey","turmeric","turnip","ube","udon","ugli","umami","unagi","vanilla","vegan","vegetable","vegetarian","vinegar","vodka","waffle","walnut","water","watermelon","wheat","whiskey","wine","yam","yeast","yogurt","yolk","zucchini","pulp","dressing"],
   countries: ["albania","austria","angola","algeria","niger","russia","oman","norway","yemen","nepal","laos","sweden","denmark","kenya","ghana","argentina","nigeria","india","greece","ethiopia","australia","uganda","namibia","brazil","canada","france","germany"],
   cities: ["amsterdam","dallas","seattle","edinburgh","hamburg","guangzhou","oslo","omaha","athens","stockholm","madrid","delhi","istanbul","london","nairobi","rome","houston","newark","kuwait","toronto","oslo","lima"]
 };
@@ -452,7 +465,8 @@ const UI = {
   paceLabel: document.getElementById('paceSelectionLabel'),
   catLabel: document.getElementById('catSelectionLabel'),
   paceToggle: document.getElementById('paceToggle'),
-  catToggle: document.getElementById('catToggle')
+  catToggle: document.getElementById('catToggle'),
+  wordSuggestion: document.getElementById('wordSuggestion')
 };
 
 function toggleAccordion(type) {
@@ -463,6 +477,7 @@ function toggleAccordion(type) {
   
   const otherToggle = isPace ? UI.catToggle : UI.paceToggle;
   const otherPanel = document.getElementById(isPace ? 'catPanel' : 'pacePanel');
+  
   otherToggle.setAttribute('aria-expanded', 'false');
   otherPanel.setAttribute('aria-hidden', 'true');
   otherPanel.classList.remove('open');
@@ -586,10 +601,7 @@ function validatePlayerWord(word) {
   if (state.used.has(word)) { endGame(`Thread broken. "${word}" was already used.`); return; }
   
   const bank = wordBanks[state.category] || wordBanks.any;
-  if (state.category !== 'any' && !bank.includes(word)) { 
-    endGame(`Thread broken. "${word}" isn't in the selected category.`); 
-    return; 
-  }
+  if (state.category !== 'any' && !bank.includes(word)) { endGame(`Thread broken. "${word}" isn't in the selected category.`); return; }
 
   stopTimer();
   state.used.add(word);
@@ -629,11 +641,25 @@ function endGame(reason) {
   UI.game.classList.add('hidden');
   UI.over.classList.remove('hidden');
   UI.input.disabled = true; UI.input.blur();
+  
   UI.finalScore.textContent = state.score;
   UI.finalWords.textContent = state.used.size;
   UI.finalStreak.textContent = state.best;
   document.getElementById('gameOverMsg').textContent = reason || "";
-  announce(`Game Over. ${reason}`);
+
+  const bank = wordBanks[state.category] || wordBanks.any;
+  const available = bank.filter(w => w.startsWith(state.currentLetter) && !state.used.has(w));
+  
+  let suggestionText = "";
+  if (available.length > 0) {
+    const randomChoice = available[Math.floor(Math.random() * available.length)];
+    suggestionText = `You could have used: ${randomChoice}.`;
+  } else {
+    suggestionText = `Well done! There were no words left starting with ${state.currentLetter.toUpperCase()} in the word bank.`;
+  }
+  
+  UI.wordSuggestion.textContent = suggestionText;
+  announce(`Game Over. ${reason}. ${suggestionText}`);
 }
 
 function showSetup() {
